@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGPU Glass Caustics Path Tracer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+    canvas { display: block; cursor: crosshair; }
+    #error {
+      display: none;
+      position: fixed; inset: 0;
+      background: #111;
+      color: #f55;
+      font-family: monospace;
+      font-size: 1.1rem;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 2rem;
+    }
+    #error.visible { display: flex; }
+    #info {
+      position: fixed;
+      top: 8px; left: 8px;
+      color: #aaa;
+      font-family: monospace;
+      font-size: 12px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="error"></div>
+  <div id="info">samples: 0</div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
