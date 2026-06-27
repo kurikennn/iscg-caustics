@@ -4,10 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>WebGPU Glass Caustics Path Tracer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
     canvas { display: block; cursor: crosshair; }
+
     #error {
       display: none;
       position: fixed; inset: 0;
@@ -21,20 +25,109 @@
       padding: 2rem;
     }
     #error.visible { display: flex; }
-    #info {
-      position: fixed;
-      top: 8px; left: 8px;
-      color: #aaa;
-      font-family: monospace;
-      font-size: 12px;
+
+    #overlay {
+      position: fixed; inset: 0;
       pointer-events: none;
+      font-family: 'Noto Sans', sans-serif;
+      color: #fff;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+    }
+
+    /* ── Top-left: title block ── */
+    #title-block {
+      position: absolute;
+      top: 24px; left: 24px;
+    }
+    #title-block h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    #title-block .subtitle {
+      font-size: 1rem;
+      font-weight: 300;
+      margin-top: 4px;
+      opacity: 0.85;
+    }
+    #title-block .description {
+      font-size: 0.8rem;
+      font-weight: 300;
+      margin-top: 14px;
+      opacity: 0.65;
+      line-height: 1.6;
+      max-width: none;
+    }
+
+    /* ── Bottom-left: controls ── */
+    #controls-block {
+      position: absolute;
+      bottom: 24px; left: 24px;
+    }
+    #controls-block .controls-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0.5;
+      margin-bottom: 8px;
+    }
+    #controls-block table {
+      border-collapse: collapse;
+      font-size: 0.75rem;
+      font-weight: 300;
+    }
+    #controls-block td {
+      padding: 2px 20px 2px 0;
+      vertical-align: top;
+      opacity: 0.8;
+    }
+    #controls-block td:first-child {
+      font-weight: 400;
+      white-space: nowrap;
+    }
+    #samples {
+      font-size: 0.7rem;
+      font-weight: 300;
+      opacity: 0.4;
+      margin-top: 12px;
     }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
   <div id="error"></div>
-  <div id="info">samples: 0</div>
+
+  <div id="overlay">
+    <div id="title-block">
+      <h1>Glass Sphere Caustics</h1>
+      <div class="subtitle">Real-time Path Tracer</div>
+      <div class="description">
+        A physically-based WebGPU path tracer demonstrating caustics,<br>
+        Fresnel reflection and refraction through a glass sphere.
+      </div>
+    </div>
+
+    <div id="controls-block">
+      <div class="controls-label">Controls</div>
+      <table>
+        <tr>
+          <td>Middle-drag</td>
+          <td>Orbit camera</td>
+        </tr>
+        <tr>
+          <td>Shift + Middle-drag</td>
+          <td>Pan</td>
+        </tr>
+        <tr>
+          <td>Scroll</td>
+          <td>Zoom</td>
+        </tr>
+      </table>
+      <div id="samples">samples: 0</div>
+    </div>
+  </div>
+
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

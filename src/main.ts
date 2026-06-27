@@ -56,21 +56,18 @@ async function init() {
 
   new CameraControls(canvas, scene, resetAccum);
 
-  const lightParams = {
-    light: { x: scene.lightPos[0], y: scene.lightPos[1], z: scene.lightPos[2] },
-  };
-  const pane = new Pane({ title: 'Controls' });
-  const folder = pane.addFolder({ title: 'Light' });
-  folder.addBinding(lightParams, 'light', {
-    x: { min: -10, max: 10, step: 0.1 },
-    y: { min: 0.5, max: 20,  step: 0.1 },
-    z: { min: -10, max: 10, step: 0.1 },
-  }).on('change', () => {
-    scene.lightPos = [lightParams.light.x, lightParams.light.y, lightParams.light.z];
+  const lightParams = { x: scene.lightPos[0], y: scene.lightPos[1], z: scene.lightPos[2] };
+  const pane   = new Pane({ title: 'Controls' });
+  const folder = pane.addFolder({ title: 'Light Position' });
+  const syncLight = () => {
+    scene.lightPos = [lightParams.x, lightParams.y, lightParams.z];
     resetAccum();
-  });
+  };
+  folder.addBinding(lightParams, 'x', { min: -10, max: 10, step: 0.1 }).on('change', syncLight);
+  folder.addBinding(lightParams, 'y', { min: 0.5, max: 20,  step: 0.1 }).on('change', syncLight);
+  folder.addBinding(lightParams, 'z', { min: -10, max: 10, step: 0.1 }).on('change', syncLight);
 
-  const infoEl = document.getElementById('info')!;
+  const infoEl = document.getElementById('samples')!;
 
   function frame() {
     writeUniforms(fData, uData, scene, frameCount, canvas.width, canvas.height);

@@ -147,8 +147,12 @@ fn tracePath(primaryRay: Ray) -> vec3<f32> {
         hit = closerHit(hit, hitPlane(ray));
         hit = closerHit(hit, hitSphere(ray, u.sphereCenter, u.sphereRadius, 1u));
 
-        let lightDisk = hitSphere(ray, u.lightPos, u.lightRadius, 2u);
-        hit = closerHit(hit, lightDisk);
+        // Skip the light sphere on the primary ray — it is invisible to the camera
+        // but still terminates secondary paths (bounces), creating caustics.
+        if bounce > 0 {
+            let lightDisk = hitSphere(ray, u.lightPos, u.lightRadius, 2u);
+            hit = closerHit(hit, lightDisk);
+        }
 
         if hit.t >= 1e29 {
             // Sky / miss — dark sky
