@@ -18,6 +18,7 @@ export interface SceneParams {
   // Material
   groundAlbedo: [number, number, number];
   absorption: number;
+  dispersion: number;
 }
 
 export const defaultScene: SceneParams = {
@@ -36,11 +37,12 @@ export const defaultScene: SceneParams = {
 
   groundAlbedo: [0.8, 0.8, 0.8],
   absorption: 0.05,
+  dispersion: 0.012,
 };
 
 // Uniform buffer layout — derived from WGSL struct member alignment rules.
 // vec3<f32> has AlignOf=16 / SizeOf=12, so the compiler inserts implicit padding:
-//   - 12 bytes between sphereIOR (ends @68) and _pad1 (AlignOf=16 → starts @80)
+//   - 8 bytes between dispersion (ends @72) and _pad1 (AlignOf=16 → starts @80)
 //   - 4 bytes between _pad1 (ends @92) and lightPos (AlignOf=16 → starts @96)
 //
 // Float index → byte offset → field
@@ -53,7 +55,8 @@ export const defaultScene: SceneParams = {
 //  [12..14] 48  sphereCenter  vec3
 //  [15]    60  sphereRadius   f32
 //  [16]    64  sphereIOR      f32
-//  [17..19] 68  (implicit pad — WGSL aligns _pad1 to 80)
+//  [17]    68  dispersion     f32  ← slots into first 4 bytes of former implicit pad
+//  [18..19] 72  (implicit pad — WGSL aligns _pad1 to 80)
 //  [20..22] 80  _pad1         vec3
 //  [23]    92  (implicit pad — WGSL aligns lightPos to 96)
 //  [24..26] 96  lightPos      vec3
@@ -62,7 +65,7 @@ export const defaultScene: SceneParams = {
 //  [31]   124  lightIntensity f32
 //  [32..34] 128  groundAlbedo vec3
 //  [35]   140  absorption     f32
-// Total: 36 floats = 144 bytes
+// Total: 36 floats = 144 bytes (unchanged)
 export const UNIFORM_BUFFER_SIZE = 144;
 
 export function writeUniforms(
@@ -90,7 +93,8 @@ export function writeUniforms(
   buffer[14] = scene.sphereCenter[2];
   buffer[15] = scene.sphereRadius;
   buffer[16] = scene.sphereIOR;
-  // [17..19]: implicit WGSL padding (offsets 68–76) — leave as zero
+  buffer[17] = scene.dispersion;
+  // [18..19]: implicit WGSL padding (offsets 72–76) — leave as zero
   // [20..22]: _pad1 vec3 (offset 80) — leave as zero
   // [23]: implicit WGSL padding (offset 92) — leave as zero
   buffer[24] = scene.lightPos[0];

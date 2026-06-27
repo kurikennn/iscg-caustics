@@ -57,15 +57,22 @@ async function init() {
   new CameraControls(canvas, scene, resetAccum);
 
   const lightParams = { x: scene.lightPos[0], y: scene.lightPos[1], z: scene.lightPos[2] };
-  const pane   = new Pane({ title: 'Controls' });
-  const folder = pane.addFolder({ title: 'Light Position' });
+  const glassParams = { dispersion: scene.dispersion };
+
+  const pane = new Pane({ title: 'Controls' });
+
+  const lightFolder = pane.addFolder({ title: 'Light Position' });
   const syncLight = () => {
     scene.lightPos = [lightParams.x, lightParams.y, lightParams.z];
     resetAccum();
   };
-  folder.addBinding(lightParams, 'x', { min: -10, max: 10, step: 0.1 }).on('change', syncLight);
-  folder.addBinding(lightParams, 'y', { min: 0.5, max: 20,  step: 0.1 }).on('change', syncLight);
-  folder.addBinding(lightParams, 'z', { min: -10, max: 10, step: 0.1 }).on('change', syncLight);
+  lightFolder.addBinding(lightParams, 'x', { min: -10, max: 10, step: 0.1 }).on('change', syncLight);
+  lightFolder.addBinding(lightParams, 'y', { min: 0.5, max: 20,  step: 0.1 }).on('change', syncLight);
+  lightFolder.addBinding(lightParams, 'z', { min: -10, max: 10, step: 0.1 }).on('change', syncLight);
+
+  const glassFolder = pane.addFolder({ title: 'Glass' });
+  glassFolder.addBinding(glassParams, 'dispersion', { min: 0.0, max: 0.05, step: 0.001 })
+    .on('change', () => { scene.dispersion = glassParams.dispersion; resetAccum(); });
 
   const infoEl = document.getElementById('samples')!;
 

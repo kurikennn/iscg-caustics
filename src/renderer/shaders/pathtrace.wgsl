@@ -9,7 +9,8 @@ struct CameraUniforms {
     sphereCenter  : vec3<f32>,
     sphereRadius  : f32,
     sphereIOR     : f32,
-    _pad1         : vec3<f32>,
+    dispersion    : f32,        // offset 68; absorbs first 4 of 12 implicit-pad bytes
+    _pad1         : vec3<f32>,  // offset 80 (align 16)
 
     lightPos      : vec3<f32>,
     lightRadius   : f32,
@@ -135,7 +136,7 @@ fn schlick(cosTheta: f32, ior: f32) -> f32 {
 }
 
 // ── Path trace ────────────────────────────────────────────────────────────────
-fn tracePath(primaryRay: Ray) -> vec3<f32> {
+fn tracePath(primaryRay: Ray, ior: f32) -> vec3<f32> {
     var ray = primaryRay;
     var throughput = vec3<f32>(1.0);
     var color      = vec3<f32>(0.0);
@@ -175,11 +176,10 @@ fn tracePath(primaryRay: Ray) -> vec3<f32> {
 
         // Glass
         if hit.matID == 1u {
-            // frontFace=true  → entering glass: eta = ni/nt = 1/IOR
-            // frontFace=false → exiting  glass: eta = ni/nt = IOR/1
-            let ior = select(u.sphereIOR, 1.0 / u.sphereIOR, hit.frontFace);
+            // eta = ratio ni/nt; ior parameter carries per-channel IOR for dispersion
+            let eta = select(ior, 1.0 / ior, hit.frontFace);
             let cosI = min(dot(-ray.dir, hit.normal), 1.0);
-            let sinT2 = ior * ior * (1.0 - cosI * cosI);
+            let sinT2 = eta * eta * (1.0 - cosI * cosI);
 
             // Beer-Lambert attenuation for path length inside the glass
             if !hit.frontFace {
@@ -191,11 +191,11 @@ fn tracePath(primaryRay: Ray) -> vec3<f32> {
                 // Total internal reflection
                 ray = Ray(hit.pos + hit.normal * 0.0001, reflected);
             } else {
-                let fresnel = schlick(cosI, ior);
+                let fresnel = schlick(cosI, eta);
                 if rand() < fresnel {
                     ray = Ray(hit.pos + hit.normal * 0.0001, reflected);
                 } else {
-                    let refracted = refract(ray.dir, hit.normal, ior);
+                    let refracted = refract(ray.dir, hit.normal, eta);
                     ray = Ray(hit.pos - hit.normal * 0.0001, refracted);
                 }
             }
@@ -243,7 +243,22 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
     let rayDir = normalize(fwd + ndc.x * right + ndc.y * camUp);
     let ray    = Ray(u.cameraPos, rayDir);
 
-    let newSample = tracePath(ray);
+    // Per-channel IOR for chromatic dispersion (R bends less, B bends more)
+    let iorR = u.sphereIOR - u.dispersion;
+    let iorG = u.sphereIOR;
+    let iorB = u.sphereIOR + u.dispersion;
+
+    // Reseed independently per channel so each path is uncorrelated
+    rngState = (gid.x * 1973u + gid.y * 9277u + u.frameCount * 26699u) | 1u;
+    let r = tracePath(ray, iorR).r;
+
+    rngState = (gid.x * 1973u + gid.y * 9277u + u.frameCount * 26699u + 1u) | 1u;
+    let g = tracePath(ray, iorG).g;
+
+    rngState = (gid.x * 1973u + gid.y * 9277u + u.frameCount * 26699u + 2u) | 1u;
+    let b = tracePath(ray, iorB).b;
+
+    let newSample = vec3<f32>(r, g, b);
 
     // Temporal accumulation
     let prev = textureLoad(readTex, px, 0).rgb;
