@@ -1,3 +1,4 @@
+import { Pane } from 'tweakpane';
 import { PathTracer } from './renderer/pathtracer';
 import { defaultScene, writeUniforms, UNIFORM_BUFFER_SIZE } from './scene/scene';
 import { CameraControls } from './ui/controls';
@@ -54,6 +55,20 @@ async function init() {
   resize();
 
   new CameraControls(canvas, scene, resetAccum);
+
+  const lightParams = {
+    light: { x: scene.lightPos[0], y: scene.lightPos[1], z: scene.lightPos[2] },
+  };
+  const pane = new Pane({ title: 'Controls' });
+  const folder = pane.addFolder({ title: 'Light' });
+  folder.addBinding(lightParams, 'light', {
+    x: { min: -10, max: 10, step: 0.1 },
+    y: { min: 0.5, max: 20,  step: 0.1 },
+    z: { min: -10, max: 10, step: 0.1 },
+  }).on('change', () => {
+    scene.lightPos = [lightParams.light.x, lightParams.light.y, lightParams.light.z];
+    resetAccum();
+  });
 
   const infoEl = document.getElementById('info')!;
 
